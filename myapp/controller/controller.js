@@ -1,45 +1,67 @@
 //create the controller
 //CRUD functions
 
+const { sequelize } = require("../models");
 const db = require("../models");
+const { options } = require("../routes/routes");
 const Book = db.books;
 const Op = db.Sequelize.Op;
 
 //get all books
+const Pagination = (page, size) => {
+  const limit = size ? +size : 3;
+  const offset = page ? page * limit : 0;
+  return { limit, offset};
+};
+const getPagingData = (data, page, limit) => {
+  const { length: totalItems, rows:Book } = data;
+  const currentPage = page ? +page : 0;
+  const books_shown = data.length;
+  return { Book,books_shown ,currentPage };
+};
 exports.findAll = (req, res) => {
-    const title = req.query.title;
-    var condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-    Book.findAll({ where: condition })
-      .then(data => {
-        res.send(data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          message:
-            err.message || "Some error occurred while retrieving tutorials."
-        });
+  const { page, size } = req.query;
+  const { limit, offset } = Pagination(page, size);
+  const title = req.query.title;
+  Book.findAll({ where: title, limit, offset })
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.send({
+        message : 'success',
+        paging_details : 'Paging starts with index 0',
+        response,
+        data
       });
-  };
-
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving tutorials."
+      });
+    });
+};
 
 //get one book
 exports.findOne = (req, res) => {
-    Book.findByPk(req.params.id)
-      .then(data => {
-        if (data) {
-          res.send(data);
-        } else {
-          res.status(404).send({
-            message: `Cannot find Tutorial with id=${id}.`
-          });
-        }
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: "Error retrieving Tutorial with id=" + id
-        });
+  Book.findByPk(req.params.id)
+  .then(data => {
+    if (!data) {
+      res.status(404).json({
+        status :'fail',
+        message : 'Book not found'
       });
- };
+    } else {
+      res.send({
+        message : 'success',
+        data});
+    }
+  })
+  .catch(err => {
+    res.status(500).send({
+      message: "Error retrieving Book with id=" + id
+    });
+  });
+};
 
 //create and save a new book
 exports.create = (req, res) => {
@@ -59,7 +81,9 @@ exports.create = (req, res) => {
     // Save Tutorial in the database
     Book.create(book)
       .then(data => {
-        res.send(data);
+        res.send({
+          message : 'success',
+          data});
       })
       .catch(err => {
         res.status(500).send({
@@ -73,16 +97,18 @@ exports.create = (req, res) => {
 exports.update = (req, res) => {
     const id = req.params.id;
     Book.update(req.body,{
-        where: { id: id }
+        where: { id: id },
+        logging:true,
+        benchmark:true
       })
       .then(num => {
         if (num == 1) {
           res.send({
             message: "Book was updated successfully."
-          });
+        });
         } else {
-          res.send({
-            message: `Cannot update book with id=${id}.`
+          res.status(404).send({
+            message:`Book with id:${id} not found.`
           });
         }
       })
@@ -94,26 +120,53 @@ exports.update = (req, res) => {
   };
 
 //delete a book
-exports.delete = (req, res) => {
-    const id = req.params.id;
-    Book.destroy({
-        where: { id: id }
-      })
-      .then(num => {
-        if (num == 1) {
-          res.send({
-            message: "Book was deleted successfully!"
-          });
-        } else {
-          res.send({
-            message: `Cannot delete the book with id=${id}.`
-          });
-        }
-      })
-      .catch(err => {
-        res.status(500).send({
-          message: "Could not delete book with id=" + id
+//soft deletion
+exports.delete = async(req, res) => {
+  const id = req.params.id;
+  await Book.destroy({
+      where: { id: id }
+    })
+    .then(num => {
+      if (num == 1) {
+        res.send({
+          message: "Book was soft deleted successfully!"
         });
+      } else {
+        res.status(404).send({
+          message:`Book with id:${id} not found.`
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: "Could not delete book with id=" + id
       });
-  };
+    });
+};
+
+//hard deletion
+//soft deletion
+exports.hdelete = (req, res) => {
+  const id = req.params.id;
+  Book.destroy({
+      where: { id: id },
+      force:true
+    })
+    .then(num => {
+      if (num == 1) {
+        res.send({
+          message: "Book was soft deleted successfully!"
+        });
+      } else {
+        res.status(404).send({
+          message:`Book with id:${id} not found.`
+        });
+      }
+    })
+    .catch(err => {
+      res.status(500).send({
+        message: "Could not delete book with id=" + id
+      });
+    });
+};
 

@@ -19,7 +19,11 @@ router.post("/",controller.create);
 router.patch("/:id",controller.update);
 
 //delete a book
+//soft delete
 router.delete("/:id",controller.delete);
+//hard delete
+router.delete("/hdelete/:id",controller.hdelete);
 
+//export
 module.exports = router;
 

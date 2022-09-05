@@ -5,6 +5,8 @@ const Sequelize = require("sequelize");
 const sequelize = new Sequelize(dbConfig.DB,dbConfig.USER,dbConfig.PASSWORD,{
     host : dbConfig.HOST,
     dialect : dbConfig.dialect,
+    logging : false,
+    benchmark : true,
     operatorsAliases : false,
     pool : {
         max : dbConfig.pool.max,
@@ -17,7 +19,8 @@ const sequelize = new Sequelize(dbConfig.DB,dbConfig.USER,dbConfig.PASSWORD,{
 const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
-db.books = require("./model.js")(sequelize, Sequelize);
+db.books = require("./model")(sequelize, Sequelize);
+//db.users = require("./model")(sequelize,Sequelize);
 
 //export
 module.exports = db;

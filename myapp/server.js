@@ -2,7 +2,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const db = require("./models");
-const router = require("./routes/routes");
+const bookrouter = require("./routes/routes");
+const userrouter = require("./routes/userRoutes");
+
 //new express application
 const app = express();
 
@@ -29,12 +31,13 @@ app.listen(port, ()=>{
     console.log(`App running on port ${port}....`);
 });
 
-app.get("/",(req,res)=> {
+app.get("/home",(req,res)=> {
     res.status(200).json({
         status : "success",
     message : "Welcome to myApp!"
     });
 })
 
-app.use('/books',router)
+app.use('/books',bookrouter)
+app.use('/users',userrouter)
 

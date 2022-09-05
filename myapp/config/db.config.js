@@ -3,10 +3,10 @@ const dotenv = require("dotenv");
 module.exports = {
     //configuration for mysql
     HOST : "localhost",
-    USER : "root",
-    PASSWORD: "123456",
-    DB:"testdb",
-    dialect : "mysql",
+    USER : "postgres",
+    PASSWORD: "12345678",
+    DB:"postgres",
+    dialect : "postgres",
     //optional configuration for sequelize
     pool: {
         max:5, //max no.of connection
